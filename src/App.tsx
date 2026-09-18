@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, FileSpreadsheet, Printer, CreditCard, Settings, Trash2, X, PlusCircle, Filter, Download } from 'lucide-react';
+import { Upload, FileSpreadsheet, Printer, CreditCard, Settings, Trash2, X, PlusCircle, Filter, Download, FileText } from 'lucide-react';
 import { ProductData, CardBenefit, CARD_BENEFITS } from './types';
 import { parseExcel } from './lib/excel';
 import PopCard from './components/PopCard';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 // PWA Install Hook
 interface BeforeInstallPromptEvent extends Event {
@@ -65,6 +67,7 @@ export default function App() {
   
   const [products, setProducts] = useState<ProductData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedCardId, setSelectedCardId] = useState<string>(CARD_BENEFITS[0].id);
   
@@ -148,6 +151,48 @@ export default function App() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadPDF = async () => {
+    const printArea = document.getElementById('print-area');
+    if (!printArea) return;
+    
+    setIsDownloading(true);
+    try {
+      // PDF 저장을 위해 임시로 print-area 활성화
+      printArea.classList.remove('hidden', 'print:block');
+      printArea.style.display = 'block';
+
+      const pages = printArea.querySelectorAll('.print-page');
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i] as HTMLElement;
+        const canvas = await html2canvas(page, {
+          scale: 2,
+          useCORS: true,
+          logging: false
+        });
+        
+        const imgData = canvas.toDataURL('image/png');
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, 0, 297, 210);
+      }
+
+      pdf.save('구독POP_출력물.pdf');
+    } catch (err) {
+      console.error(err);
+      alert('PDF 저장 중 오류가 발생했습니다.');
+    } finally {
+      // 원래 상태로 복구
+      printArea.style.display = '';
+      printArea.classList.add('hidden', 'print:block');
+      setIsDownloading(false);
+    }
   };
 
   const selectedCard = CARD_BENEFITS.find(c => c.id === selectedCardId) || CARD_BENEFITS[0];
@@ -250,14 +295,24 @@ export default function App() {
                 </button>
               )}
 
-              {/* Print / PDF Button */}
+              {/* Print Button */}
               <button 
                 onClick={handlePrint}
                 disabled={displayedProducts.length === 0}
                 className="flex items-center gap-2 bg-slate-800 text-white px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Printer className="w-4 h-4" />
-                PDF 저장 / 인쇄 ({displayedProducts.length})
+                일반 인쇄 ({displayedProducts.length})
+              </button>
+
+              {/* PDF Button */}
+              <button 
+                onClick={handleDownloadPDF}
+                disabled={displayedProducts.length === 0 || isDownloading}
+                className="flex items-center gap-2 bg-red-600 text-white px-4 py-1.5 rounded-lg text-sm font-bold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FileText className="w-4 h-4" />
+                {isDownloading ? 'PDF 생성 중...' : 'PDF 저장'}
               </button>
             </div>
           </div>
@@ -322,7 +377,7 @@ export default function App() {
               {productPairs.map((pair, idx) => (
                 <div 
                   key={idx} 
-                  className="w-[297mm] h-[210mm] mx-auto flex relative overflow-hidden bg-white"
+                  className="print-page w-[297mm] h-[210mm] mx-auto flex relative overflow-hidden bg-white"
                   style={{ pageBreakAfter: 'always', breakAfter: 'page' }}
                 >
                   {/* 중앙 재단선 (Cutting Line) */}

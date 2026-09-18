@@ -18,5 +18,10 @@
   .no-print {
     display: none !important;
   }
+
+  /* Force borders to be visible */
+  * {
+    border-color: rgba(30, 41, 59, 1) !important;
+  }
 }
 

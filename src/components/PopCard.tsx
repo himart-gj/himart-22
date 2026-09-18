@@ -42,9 +42,9 @@ export default function PopCard({ product, cardBenefit }: PopCardProps) {
   const calculatedDownPayment = product.monthlyFee * product.period;
   const totalBenefitPrice = perceivedPrice * product.period;
 
-  // 3년/5년 AS 자동 판단 로직 개선
-  const is3Years = [product.careServiceText, product.careServiceCycle, product.careServiceCount, product.careServiceDetail]
-    .some(text => text?.includes('3년'));
+  // 3년/5년 AS 자동 판단 로직 개선 (엑셀 모든 값에서 확인)
+  const allText = Object.values(product).join(' ');
+  const is3Years = allText.includes('3년') || allText.includes('안심케어3') || allText.includes('안심케어 3') || allText.includes('정기케어3') || allText.includes('정기케어 3');
   const warrantyYears = is3Years ? '3' : '5';
 
   return (
@@ -128,7 +128,10 @@ export default function PopCard({ product, cardBenefit }: PopCardProps) {
           <div className="text-[10px] font-bold text-slate-500 mb-0.5 flex items-center justify-center gap-1">
             <span>🏷️</span> 제품 모델명
           </div>
-          <div className="font-bold text-slate-800 text-[11px] break-all leading-tight">{product.modelName}</div>
+          <div className="font-bold text-slate-800 text-[11px] break-all leading-tight">
+            {product.category && <span className="text-blue-600 mr-1.5 font-black">[{product.category}]</span>}
+            {product.modelName}
+          </div>
         </div>
       </div>
 
