@@ -3,7 +3,7 @@ import { Upload, FileSpreadsheet, Printer, CreditCard, Settings, Trash2, X, Plus
 import { ProductData, CardBenefit, CARD_BENEFITS } from './types';
 import { parseExcel } from './lib/excel';
 import PopCard from './components/PopCard';
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
 import jsPDF from 'jspdf';
 
 // PWA Install Hook
