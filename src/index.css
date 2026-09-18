@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 0; /* Zero margin to perfectly fit 2 A5s side-by-side */
+  }
+
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background: white;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Hide UI elements not meant for printing */
+  .no-print {
+    display: none !important;
+  }
+}
+

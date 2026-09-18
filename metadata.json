@@ -1,0 +1,6 @@
+{
+  "name": "구독 POP 자동 출력기",
+  "description": "엑셀 데이터를 기반으로 구독 상품 POP를 자동으로 생성하고 인쇄하는 도구입니다.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
