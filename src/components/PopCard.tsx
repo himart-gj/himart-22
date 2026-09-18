@@ -59,7 +59,7 @@ export default function PopCard({ product, cardBenefit }: PopCardProps) {
           style={{ transform: `scale(${scale})` }}
         >
           {/* Top Section */}
-          <div className="text-center mb-4">
+          <div className="text-center mb-2">
         <div className="flex justify-center gap-1 mb-1">
           {[...Array(5)].map((_, i) => (
             <svg key={i} className="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 20 20">
@@ -83,31 +83,31 @@ export default function PopCard({ product, cardBenefit }: PopCardProps) {
         <h1 className="text-3xl font-black text-slate-800 tracking-tight leading-tight">
           구독하면 <span className="text-blue-700 italic text-4xl">더!</span> 합리적인 선택
         </h1>
-        <div className="mt-3 bg-slate-800 text-white inline-flex items-center px-5 py-1.5 rounded-full text-sm font-bold shadow-md">
+        <div className="mt-2 bg-slate-800 text-white inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold shadow-md">
           <span className="text-yellow-400 mr-2">초기 비용 부담 ZERO!</span>
           <span className="border-l border-slate-500 pl-2">초기 부담 없이 바로 시작하세요!</span>
         </div>
       </div>
 
       {/* Main Price Box */}
-      <div className="border-2 border-slate-200 rounded-xl mt-6 p-4 pb-3 relative flex-1 flex flex-col items-center justify-center bg-slate-50">
+      <div className="border-2 border-slate-200 rounded-xl mt-4 p-3 relative flex-1 flex flex-col items-center justify-center bg-slate-50">
         <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-yellow-500 text-slate-900 font-bold px-6 py-1.5 rounded-full text-base flex items-center shadow-md border-2 border-white whitespace-nowrap">
           <span className="mr-2 text-lg">💳</span> 제휴카드 적용 시
         </div>
         
-        <h2 className="text-2xl font-bold text-slate-700 mb-0 mt-4">월 체감가 ✨</h2>
+        <h2 className="text-xl font-bold text-slate-700 mb-0 mt-3">월 체감가 ✨</h2>
         <div className="flex items-end text-red-600 font-black tracking-tighter">
-          <span className="text-[5.5rem] leading-none">{formatNumber(perceivedPrice)}</span>
-          <span className="text-3xl mb-3 ml-2">원</span>
+          <span className="text-[4.8rem] leading-none">{formatNumber(perceivedPrice)}</span>
+          <span className="text-2xl mb-2 ml-2">원</span>
         </div>
         
         {/* 구독 계약금 및 최종 혜택가 */}
-        <div className="mt-2 bg-slate-200/70 text-slate-700 text-xs font-bold px-4 py-2 rounded-lg flex items-center justify-center gap-3 w-full">
+        <div className="mt-1 bg-slate-200/70 text-slate-700 text-xs font-bold px-4 py-1.5 rounded-lg flex items-center justify-center gap-3 w-full">
           <span>총 구독 원금 <span className="text-slate-900 ml-1">{formatNumber(calculatedDownPayment)}원</span></span>
           <span className="text-slate-400">|</span>
           <span>총 구독 체감가 <span className="text-red-600 ml-1">{formatNumber(totalBenefitPrice)}원</span></span>
         </div>
-        <p className="text-[10px] text-slate-500 mt-2 font-medium">※ 월 30만원 사용 기준</p>
+        <p className="text-[10px] text-slate-500 mt-1 font-medium">※ 월 30만원 사용 기준</p>
       </div>
 
       {/* Info Row */}
