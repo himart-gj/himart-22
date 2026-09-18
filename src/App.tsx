@@ -396,10 +396,12 @@ export default function App() {
                   <div className="absolute left-1/2 top-0 bottom-0 border-l border-dashed border-slate-400 z-50"></div>
                   
                   {/* 카드 렌더링 (최대 2개) */}
-                  {pair.map((product) => (
+                  {pair.map((product, idx) => (
                     <div key={product.id} className="w-[148.5mm] h-[210mm] flex items-center justify-center box-border shrink-0">
-                      <div className="w-full h-full print:scale-[0.95] origin-center flex items-center justify-center">
-                        <PopCard product={product} cardBenefit={selectedCard} />
+                      <div className="w-full h-full flex items-center justify-center print:p-[10mm]">
+                        <div className="w-full h-full relative">
+                          <PopCard product={product} cardBenefit={selectedCard} />
+                        </div>
                       </div>
                     </div>
                   ))}

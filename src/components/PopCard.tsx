@@ -55,7 +55,7 @@ export default function PopCard({ product, cardBenefit }: PopCardProps) {
         style={{ width: `${561.26 * scale}px`, height: `${793.7 * scale}px` }}
       >
         <div 
-          className="w-[148.5mm] h-[210mm] bg-white border-8 border-slate-800 px-6 pt-6 pb-10 flex flex-col shadow-lg box-border shrink-0 origin-top-left absolute top-0 left-0 print:!relative print:!transform-none print:w-full print:h-full print:border-[8px] print:shadow-none print:m-0"
+          className="w-[148.5mm] h-[210mm] bg-white border-8 border-slate-800 px-6 pt-6 pb-10 print:px-5 print:pt-5 print:pb-8 flex flex-col shadow-lg box-border shrink-0 origin-top-left absolute top-0 left-0 print:!relative print:!transform-none print:w-full print:h-full print:border-[6px] print:shadow-none print:m-0"
           style={{ transform: `scale(${scale})` }}
         >
           {/* Top Section */}
