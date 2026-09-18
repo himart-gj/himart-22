@@ -3,7 +3,7 @@ import { Upload, FileSpreadsheet, Printer, CreditCard, Settings, Trash2, X, Plus
 import { ProductData, CardBenefit, CARD_BENEFITS } from './types';
 import { parseExcel } from './lib/excel';
 import PopCard from './components/PopCard';
-import html2canvas from 'html2canvas-pro';
+import domToImage from 'dom-to-image-more';
 import jsPDF from 'jspdf';
 
 // PWA Install Hook
@@ -176,16 +176,19 @@ export default function App() {
 
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i] as HTMLElement;
-        const canvas = await html2canvas(page, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff'
+        const pageDataUrl = await domToImage.toJpeg(page, {
+          quality: 0.95,
+          bgcolor: '#ffffff',
+          style: {
+            transform: 'none',
+            margin: '0',
+            width: '100%',
+            height: '100%'
+          }
         });
         
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
         if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
+        pdf.addImage(pageDataUrl, 'JPEG', 0, 0, 297, 210);
       }
 
       pdf.save('구독POP_출력물.pdf');
