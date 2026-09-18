@@ -160,8 +160,12 @@ export default function App() {
     setIsDownloading(true);
     try {
       // PDF 저장을 위해 임시로 print-area 활성화
+      const originalCssText = printArea.style.cssText;
       printArea.classList.remove('hidden', 'print:block');
-      printArea.style.display = 'block';
+      printArea.style.cssText = 'display: block; position: absolute; left: 0; top: 0; z-index: -1;';
+
+      // 레이아웃이 완전히 잡힐 때까지 약간 대기
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const pages = printArea.querySelectorAll('.print-page');
       const pdf = new jsPDF({
@@ -175,22 +179,27 @@ export default function App() {
         const canvas = await html2canvas(page, {
           scale: 2,
           useCORS: true,
-          logging: false
+          logging: false,
+          backgroundColor: '#ffffff'
         });
         
-        const imgData = canvas.toDataURL('image/png');
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
         if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, 0, 297, 210);
+        pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
       }
 
       pdf.save('구독POP_출력물.pdf');
+      
+      // 원래 상태로 복구
+      printArea.style.cssText = originalCssText;
+      printArea.classList.add('hidden', 'print:block');
     } catch (err) {
       console.error(err);
-      alert('PDF 저장 중 오류가 발생했습니다.');
-    } finally {
-      // 원래 상태로 복구
+      alert('PDF 저장 중 오류가 발생했습니다: ' + (err as Error).message);
+      // 에러 발생 시에도 복구
       printArea.style.display = '';
       printArea.classList.add('hidden', 'print:block');
+    } finally {
       setIsDownloading(false);
     }
   };
@@ -385,7 +394,7 @@ export default function App() {
                   
                   {/* 카드 렌더링 (최대 2개) */}
                   {pair.map((product) => (
-                    <div key={product.id} className="w-[148.5mm] h-[210mm] p-[3mm] flex items-center justify-center box-border shrink-0">
+                    <div key={product.id} className="w-[148.5mm] h-[210mm] flex items-center justify-center box-border shrink-0">
                       <PopCard product={product} cardBenefit={selectedCard} />
                     </div>
                   ))}

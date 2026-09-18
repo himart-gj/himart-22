@@ -14,6 +14,12 @@
     padding: 0;
   }
 
+  /* Shrink the print page slightly to avoid hardware margins cutting off borders */
+  .print-page {
+    transform: scale(0.94) !important;
+    transform-origin: center center !important;
+  }
+
   /* Hide UI elements not meant for printing */
   .no-print {
     display: none !important;

@@ -8,10 +8,11 @@ const HEADER_ALIASES = {
   downPayment: ['계약금', '구독계약금', '초기비용', '가입비', '등록비'],
   period: ['구독 개월 수', '구독 개월수', '구독개월', '개월수', '구독기간', '기간', '약정기간', '약정', '렌탈기간', '개월'],
   category: ['품목', '카테고리', '분류', '종류', '제품군', '품목/상품'],
-  careServiceText: ['안심케어1', '정기케어1', '구독패키지', '패키지', '서비스', '케어', '관리'],
+  careServiceText: ['안심케어1', '정기케어1', '구독패키지', '패키지', '서비스명', '케어명', '서비스', '케어', '관리'],
   careServiceCycle: ['안심케어2', '정기케어2', '주기', '방문주기', '관리주기', '케어주기'],
-  careServiceCount: ['안심케어3', '정기케어3', '회수', '횟수', '방문횟수'],
-  careServiceDetail: ['안심케어4', '보증기간', '상세', '서비스내용']
+  careServiceCount: ['횟수', '회수', '방문횟수', '제공횟수'], // 횟수를 명확하게 찾기 위해 안심케어3 제외
+  careServiceBenefit: ['안심케어3', '정기케어3', '혜택', '가치', '상당', '금액상당'], // "27만원 상당" 같은 텍스트가 있는 곳
+  careServiceDetail: ['안심케어4', '정기케어4', '보증기간', '상세', '서비스내용', '내용']
 };
 
 function findColumnIndex(headers: string[], aliases: string[], excludeTokens: string[] = []): number {
@@ -76,6 +77,7 @@ export function parseExcel(file: File): Promise<ProductData[]> {
               careServiceText: findColumnIndex(headers, HEADER_ALIASES.careServiceText),
               careServiceCycle: findColumnIndex(headers, HEADER_ALIASES.careServiceCycle),
               careServiceCount: findColumnIndex(headers, HEADER_ALIASES.careServiceCount),
+              careServiceBenefit: findColumnIndex(headers, HEADER_ALIASES.careServiceBenefit),
               careServiceDetail: findColumnIndex(headers, HEADER_ALIASES.careServiceDetail),
             };
             break;
@@ -106,6 +108,8 @@ export function parseExcel(file: File): Promise<ProductData[]> {
 
           const rawDown = colIndices.downPayment !== -1 ? (row[colIndices.downPayment]?.toString() || '0') : '0';
           const downPayment = Math.floor(parseFloat(rawDown.replace(/,/g, '').replace(/[^0-9.-]/g, ''))) || 0;
+          
+          const rawRowText = row.map((cell: any) => cell ? cell.toString() : '').join(' ');
 
           products.push({
             id: crypto.randomUUID(),
@@ -117,9 +121,11 @@ export function parseExcel(file: File): Promise<ProductData[]> {
             careServiceText: colIndices.careServiceText !== -1 ? (row[colIndices.careServiceText]?.toString() || '') : '',
             careServiceCycle: colIndices.careServiceCycle !== -1 ? (row[colIndices.careServiceCycle]?.toString() || '') : '',
             careServiceCount: colIndices.careServiceCount !== -1 ? (row[colIndices.careServiceCount]?.toString() || '') : '',
+            careServiceBenefit: colIndices.careServiceBenefit !== -1 ? (row[colIndices.careServiceBenefit]?.toString() || '') : '',
             careServiceDetail: colIndices.careServiceDetail !== -1 ? (row[colIndices.careServiceDetail]?.toString() || '') : '',
             imageUrl: '',
-            changeStatus: 'new'
+            changeStatus: 'new',
+            rawRowText
           });
         }
 

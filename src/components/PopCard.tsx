@@ -42,9 +42,9 @@ export default function PopCard({ product, cardBenefit }: PopCardProps) {
   const calculatedDownPayment = product.monthlyFee * product.period;
   const totalBenefitPrice = perceivedPrice * product.period;
 
-  // 3년/5년 AS 자동 판단 로직 개선 (엑셀 모든 값에서 확인)
-  const allText = Object.values(product).join(' ');
-  const is3Years = allText.includes('3년') || allText.includes('안심케어3') || allText.includes('안심케어 3') || allText.includes('정기케어3') || allText.includes('정기케어 3');
+  // 3년/5년 AS 자동 판단 로직 초강화 (엑셀의 모든 셀 내용을 공백 없이 검사)
+  const allText = (product.rawRowText || Object.values(product).join(' ')).replace(/\s+/g, '');
+  const is3Years = allText.includes('3년') || allText.includes('안심케어3') || allText.includes('정기케어3');
   const warrantyYears = is3Years ? '3' : '5';
 
   return (
@@ -55,7 +55,7 @@ export default function PopCard({ product, cardBenefit }: PopCardProps) {
         style={{ width: `${561.26 * scale}px`, height: `${793.7 * scale}px` }}
       >
         <div 
-          className="w-[148.5mm] h-[210mm] bg-white border-8 border-slate-800 p-6 flex flex-col shadow-lg box-border shrink-0 origin-top-left absolute top-0 left-0 print:!relative print:!transform-none print:w-full print:h-full print:border-[8px] print:shadow-none print:m-0"
+          className="w-[148.5mm] h-[210mm] bg-white border-8 border-slate-800 px-6 pt-6 pb-10 flex flex-col shadow-lg box-border shrink-0 origin-top-left absolute top-0 left-0 print:!relative print:!transform-none print:w-full print:h-full print:border-[8px] print:shadow-none print:m-0"
           style={{ transform: `scale(${scale})` }}
         >
           {/* Top Section */}
@@ -92,7 +92,7 @@ export default function PopCard({ product, cardBenefit }: PopCardProps) {
       {/* Main Price Box */}
       <div className="border-2 border-slate-200 rounded-xl mt-6 p-4 pb-3 relative flex-1 flex flex-col items-center justify-center bg-slate-50">
         <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-yellow-500 text-slate-900 font-bold px-6 py-1.5 rounded-full text-base flex items-center shadow-md border-2 border-white whitespace-nowrap">
-          <span className="mr-2 text-lg">💳</span> 카드 혜택 적용 시
+          <span className="mr-2 text-lg">💳</span> 제휴카드 적용 시
         </div>
         
         <h2 className="text-2xl font-bold text-slate-700 mb-0 mt-4">월 체감가 ✨</h2>
@@ -127,9 +127,9 @@ export default function PopCard({ product, cardBenefit }: PopCardProps) {
         <div className="border border-slate-200 rounded-lg p-3 text-center bg-white shadow-sm flex flex-col justify-center">
           <div className="text-[10px] font-bold text-slate-500 mb-0.5 flex items-center justify-center gap-1">
             <span>🏷️</span> 제품 모델명
+            {product.category && <span className="text-blue-600 ml-1 font-black">[{product.category}]</span>}
           </div>
           <div className="font-bold text-slate-800 text-[11px] break-all leading-tight">
-            {product.category && <span className="text-blue-600 mr-1.5 font-black">[{product.category}]</span>}
             {product.modelName}
           </div>
         </div>
@@ -138,7 +138,7 @@ export default function PopCard({ product, cardBenefit }: PopCardProps) {
       {/* Card Benefit Banner */}
       <div className="mt-4 bg-slate-800 rounded-xl p-4 flex items-center justify-between shadow-md">
         <div className="flex flex-col w-24">
-          <span className="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded uppercase font-bold self-start mb-1 text-center w-full">{activeCardBenefit.name}</span>
+          <span className="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded uppercase font-bold self-start mb-1 text-center w-full">{activeCardBenefit.name.replace('카드', '제휴카드')}</span>
           <span className="text-slate-300 text-[10px] font-medium text-center">월 30만원 사용 시</span>
         </div>
         <div className="text-center flex-1">
@@ -154,21 +154,42 @@ export default function PopCard({ product, cardBenefit }: PopCardProps) {
         {/* Box 1 */}
         <div className="border border-slate-800 rounded-lg overflow-hidden flex flex-col text-[10px]">
           <div className="bg-slate-800 text-white text-center py-1.5 font-bold">구독 케어 서비스</div>
-          <div className="p-2 flex-1 flex flex-col justify-center gap-1.5">
-            {/* 명칭, 주기, 횟수 등을 자연스럽게 이어서 표시 */}
-            {(product.careServiceText || product.careServiceCycle || product.careServiceCount) && (
-              <div className="border-b border-slate-100 pb-1.5 mb-0.5">
-                <div className="font-bold text-slate-800 break-words leading-tight">
-                  {product.careServiceText} {product.careServiceCount} {product.careServiceCycle}
-                </div>
+          <div className="p-2 flex-1 flex flex-col justify-start gap-1">
+            {/* 명칭, 주기, 횟수 등을 가독성 있게 구조화 */}
+            {(product.careServiceText || product.careServiceCycle || product.careServiceCount || product.careServiceBenefit) && (
+              <div className="border-b border-slate-200 pb-1.5">
+                {product.careServiceText && (
+                  <div className="font-bold text-slate-800 break-words leading-tight mb-1">
+                    {product.careServiceText}
+                  </div>
+                )}
+                {(product.careServiceCycle || product.careServiceCount || product.careServiceBenefit) && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {product.careServiceCycle && (
+                      <span className="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded text-[9px] font-bold">
+                        {/^\d+$/.test(product.careServiceCycle.trim()) ? `${product.careServiceCycle}개월 주기` : product.careServiceCycle}
+                      </span>
+                    )}
+                    {product.careServiceCount && (
+                      <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded text-[9px] font-bold">
+                        {/^\d+$/.test(product.careServiceCount.trim()) ? `총 ${product.careServiceCount}회` : product.careServiceCount}
+                      </span>
+                    )}
+                    {product.careServiceBenefit && (
+                      <span className="bg-green-50 text-green-700 px-1.5 py-0.5 rounded text-[9px] font-bold">
+                        {product.careServiceBenefit}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             )}
             
             {/* 상세 내용 (데미지 케어 1년, 소모품 배송 등) */}
-            {(product.careServiceDetail || (!product.careServiceText && !product.careServiceCycle && !product.careServiceDetail)) && (
-              <div className="flex flex-col">
-                <span className="text-slate-500 mb-0.5">서비스 내용</span>
-                <span className="font-bold text-blue-700 break-words leading-tight">
+            {(product.careServiceDetail || (!product.careServiceText && !product.careServiceCycle && !product.careServiceCount && !product.careServiceBenefit && !product.careServiceDetail)) && (
+              <div className="flex flex-col mt-0.5">
+                <span className="text-slate-500 mb-0.5 text-[9px]">서비스 내용</span>
+                <span className="font-bold text-blue-700 break-words leading-tight text-[10px]">
                   {product.careServiceDetail || '해당없음'}
                 </span>
               </div>

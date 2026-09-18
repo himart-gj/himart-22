@@ -7,10 +7,12 @@ export interface ProductData {
   downPayment?: number; // 구독 계약금
   careServiceText: string; // 케어명 및 횟수 (예: 데미지 케어보험 1회)
   careServiceCycle: string; // 주기 (예: 구독기간내, 24개월 주기)
-  careServiceCount: string; // 혜택 가치 등
+  careServiceCount: string; // 횟수
+  careServiceBenefit?: string; // 혜택 가치 (예: 27만원 상당)
   careServiceDetail?: string; // 상세 내용 (예: 파손보장, 소모품 배송 등)
   imageUrl: string; // User can upload/paste image later
   changeStatus?: 'new' | 'changed' | 'unchanged';
+  rawRowText?: string; // 엑셀의 원본 줄 전체 텍스트 (누락된 헤더의 정보까지 검색하기 위함)
 }
 
 export interface CardBenefit {
