@@ -101,12 +101,7 @@ export default function PopCard({ product, cardBenefit }: PopCardProps) {
           <span className="text-2xl mb-2 ml-2">원</span>
         </div>
         
-        {/* 구독 계약금 및 최종 혜택가 */}
-        <div className="mt-1 bg-slate-200/70 text-slate-700 text-xs font-bold px-4 py-1.5 rounded-lg flex items-center justify-center gap-3 w-full">
-          <span>총 구독 원금 <span className="text-slate-900 ml-1">{formatNumber(calculatedDownPayment)}원</span></span>
-          <span className="text-slate-400">|</span>
-          <span>총 구독 체감가 <span className="text-red-600 ml-1">{formatNumber(totalBenefitPrice)}원</span></span>
-        </div>
+        
         <p className="text-[10px] text-slate-500 mt-1 font-medium">※ 월 30만원 사용 기준</p>
       </div>
 
@@ -228,21 +223,17 @@ export default function PopCard({ product, cardBenefit }: PopCardProps) {
               </div>
             ))}
           </div>
-        </div>
+              </div>
+
       </div>
 
-      {/* Footer Table */}
-      <div className="mt-4 border border-slate-800 rounded-lg overflow-hidden grid grid-cols-2 text-sm font-bold">
-        <div className="flex border-r border-slate-800">
-          <div className="bg-slate-100 p-2 w-24 text-center border-r border-slate-800 text-slate-600">총 구독원금</div>
-          <div className="p-2 flex-1 text-right">{formatNumber(calculatedDownPayment)} 원</div>
-        </div>
-        <div className="flex">
-          <div className="bg-slate-100 p-2 w-24 text-center border-r border-slate-800 text-slate-600">총 구독체감가</div>
-          <div className="p-2 flex-1 text-right text-red-600 font-black">{formatNumber(totalBenefitPrice)} 원</div>
-        </div>
+      {/* Total Summary Ribbon */}
+      <div className="mt-3 bg-slate-100 rounded-lg py-1.5 px-4 flex items-center justify-center gap-1.5 text-[11px] border border-slate-200">
+        <span className="font-bold text-slate-700">{product.period}개월 총 체감가:</span>
+        <span className="font-black text-red-600 text-[13px]">{formatNumber(totalBenefitPrice)}원</span>
+        <span className="text-slate-500 font-bold ml-1">(원금 {formatNumber(calculatedDownPayment)}원)</span>
       </div>
-
+      
       <p className="text-[8px] text-slate-400 text-center mt-2 font-medium">
         ※ 본 상품은 구독 서비스 상품으로, 중도 해지 시 위약금이 발생할 수 있습니다.
       </p>
