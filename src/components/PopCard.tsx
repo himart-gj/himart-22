@@ -203,12 +203,18 @@ export default function PopCard({ product, cardBenefit }: PopCardProps) {
             {warrantyYears}년 무상 A/S
           </div>
           <div className="p-2 flex-1 flex flex-col items-center justify-center text-center">
-            <div className="w-12 h-12 bg-blue-800 text-white rounded-full flex flex-col items-center justify-center border-2 border-dashed border-blue-400 mb-2 shadow-sm">
-              <span className="text-lg font-black leading-none">{warrantyYears}</span>
-              <span className="text-[8px] font-bold">YEARS</span>
+            {/* 로제트 모양 뱃지 */}
+            <div className="relative w-20 h-20 mb-2.5 flex flex-col items-center justify-center">
+              <div className="absolute inset-1.5 bg-blue-800 rounded-xl rotate-0 shadow-sm"></div>
+              <div className="absolute inset-1.5 bg-blue-800 rounded-xl rotate-[30deg] shadow-sm"></div>
+              <div className="absolute inset-1.5 bg-blue-800 rounded-xl rotate-[60deg] shadow-sm"></div>
+              <div className="absolute inset-3 bg-white rounded-full shadow-inner border-2 border-dashed border-blue-400 z-10 flex flex-col items-center justify-center">
+                <span className="text-3xl font-black text-blue-900 leading-none mt-1 tracking-tighter">{warrantyYears}</span>
+                <span className="text-[9px] font-black text-blue-900 tracking-widest mt-0.5">YEARS</span>
+              </div>
             </div>
-            <div className="font-bold text-slate-700 leading-tight">
-              {warrantyYears}년간 무상 A/S로<br/>안심하고 사용하세요!
+            <div className="font-bold text-slate-700 leading-tight text-[11px]">
+              <span className="text-blue-900 font-extrabold">{warrantyYears}년간 무상 A/S</span>로<br/>안심하고 사용하세요!
             </div>
           </div>
         </div>

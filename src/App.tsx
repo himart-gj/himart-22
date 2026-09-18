@@ -398,7 +398,9 @@ export default function App() {
                   {/* 카드 렌더링 (최대 2개) */}
                   {pair.map((product) => (
                     <div key={product.id} className="w-[148.5mm] h-[210mm] flex items-center justify-center box-border shrink-0">
-                      <PopCard product={product} cardBenefit={selectedCard} />
+                      <div className="w-full h-full print:scale-[0.95] origin-center flex items-center justify-center">
+                        <PopCard product={product} cardBenefit={selectedCard} />
+                      </div>
                     </div>
                   ))}
                 </div>
