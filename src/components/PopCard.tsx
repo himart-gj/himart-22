@@ -109,15 +109,17 @@ export default function PopCard({ product, cardBenefit, onToggleAllCare }: PopCa
         </h1>
         {product.isAllCare ? (
           <div className="mt-2 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white px-3 py-1.5 rounded-xl shadow-md border-2 border-amber-400/70 flex flex-col items-center">
-            <div className="flex items-center gap-1.5 text-[13px] font-black tracking-tight text-amber-300">
+            <div className="flex items-center gap-1.5 text-[12.5px] font-black tracking-tight text-amber-300">
               <span className="text-sm">🛡️</span>
               <span className="bg-amber-400 text-slate-950 text-[10px] px-1.5 py-0.5 rounded font-black mr-0.5 leading-none">올케어 혜택</span>
               <span>사용중인 가전 2년 수리비 보증 서비스 추가</span>
             </div>
-            <div className="flex items-center justify-center gap-2 text-[9.5px] text-slate-200 font-medium mt-0.5 flex-wrap">
+            <div className="flex items-center justify-center gap-1.5 text-[9px] text-slate-200 font-medium mt-0.5 flex-wrap">
+              <span className="bg-white/15 px-1.5 py-0.2 rounded text-yellow-300 font-bold">총 34개 품목 (대형8·생활주방21·IT5)</span>
+              <span className="text-amber-400 font-bold">•</span>
               <span>총 2년 보증 (면책 60일)</span>
               <span className="text-amber-400 font-bold">•</span>
-              <span>연 100만원 한도 (횟수 무제한)</span>
+              <span className="text-amber-300 font-bold">총 200만원 한도 (연간 100만원/무제한)</span>
               <span className="text-amber-400 font-bold">•</span>
               <span className="text-amber-200 font-bold">1회 5천원 (10년↑ 5만원)</span>
             </div>
@@ -160,17 +162,18 @@ export default function PopCard({ product, cardBenefit, onToggleAllCare }: PopCa
           </div>
           <div className="font-extrabold text-slate-800 text-lg">{product.period}개월</div>
         </div>
-        <div className="border border-slate-200 rounded-lg p-2.5 text-center bg-white shadow-sm flex flex-col justify-center min-h-[64px]">
-          <div className="text-[10px] font-bold text-slate-400 mb-0.5 flex items-center justify-center gap-1">
-            <span>🏷️</span> 제품 모델명
-          </div>
+        <div className="border border-slate-200 rounded-lg p-2 text-center bg-white shadow-sm flex flex-col justify-center min-h-[64px]">
+          {/* 품목명: 제품 모델명 제목 윗줄에 배치 */}
           {product.category && (
             <div className="mb-0.5">
-              <span className="inline-block bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded text-[10px] font-black leading-tight break-words max-w-full">
+              <span className="inline-block bg-blue-100 text-blue-800 border border-blue-200 px-2 py-0.5 rounded text-[10px] font-black leading-tight break-words max-w-full">
                 [{product.category}]
               </span>
             </div>
           )}
+          <div className="text-[10px] font-bold text-slate-500 mb-0.5 flex items-center justify-center gap-1">
+            <span>🏷️</span> 제품 모델명
+          </div>
           <div className="font-bold text-slate-800 text-[11px] break-all leading-tight">
             {product.modelName}
           </div>
@@ -260,25 +263,34 @@ export default function PopCard({ product, cardBenefit, onToggleAllCare }: PopCa
         {/* Box 3 */}
         {product.isAllCare ? (
           <div className="border border-indigo-900 rounded-lg overflow-hidden flex flex-col text-[10px] bg-indigo-50/20">
-            <div className="bg-indigo-950 text-amber-300 text-center py-1.5 font-bold flex items-center justify-center gap-1">
+            <div className="bg-indigo-950 text-amber-300 text-center py-1 font-bold flex items-center justify-center gap-1">
               <span>🛡️</span>
               <span>사용중 가전 2년 보증</span>
             </div>
-            <div className="p-2 flex-1 flex flex-col justify-between text-[9px] leading-tight">
-              <div className="flex items-center gap-1">
+            <div className="p-1.5 flex-1 flex flex-col justify-between text-[8.5px] leading-tight">
+              <div>
+                <div className="flex items-center gap-1">
+                  <span className="text-indigo-900 font-black shrink-0">· 대상가전:</span>
+                  <span className="font-extrabold text-blue-800">총 34개 품목</span>
+                </div>
+                <div className="text-[7.5px] text-slate-500 pl-2 leading-none mt-0.5">
+                  (대형 8, 생활·주방 21, IT 5)
+                </div>
+              </div>
+              <div className="flex items-center gap-1 mt-0.5">
                 <span className="text-indigo-900 font-black shrink-0">· 보증기간:</span>
-                <span className="font-extrabold text-slate-800">총 2년 <span className="text-slate-500 font-normal text-[8px]">(면책 60일)</span></span>
+                <span className="font-extrabold text-slate-800">총 2년 <span className="text-slate-500 font-normal text-[7.5px]">(면책 60일)</span></span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-indigo-900 font-black shrink-0">· 보상한도:</span>
-                <span className="font-extrabold text-slate-800">연 100만원 <span className="text-blue-700 font-extrabold text-[8.5px]">(무제한)</span></span>
+                <span className="font-extrabold text-slate-800">총 200만원 <span className="text-blue-700 font-extrabold text-[7.5px]">(연100만/무제한)</span></span>
               </div>
-              <div className="border-t border-slate-200 pt-1 mt-0.5">
+              <div className="border-t border-slate-200 pt-0.5 mt-0.5">
                 <div className="flex items-center gap-1">
                   <span className="text-indigo-900 font-black shrink-0">· 1회 자부담:</span>
                   <span className="font-black text-red-600">5,000원</span>
                 </div>
-                <div className="text-[7.5px] text-slate-500 font-medium pl-1 mt-0.5 leading-none">
+                <div className="text-[7px] text-slate-500 font-medium pl-1 leading-none mt-0.5">
                   (제조 10년 이상 상품은 1회 5만원)
                 </div>
               </div>
