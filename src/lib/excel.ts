@@ -54,6 +54,19 @@ export function parseExcel(file: File): Promise<ProductData[]> {
         
         const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
         
+        // 올케어 여부 감지 (파일명, 시트명, 상위 제목/안내 행 검사)
+        const fileNameHasAllCare = /올\s*케\s*어|all\s*care/i.test(file.name || '');
+        const sheetNameHasAllCare = (workbook.SheetNames || []).some(s => /올\s*케\s*어|all\s*care/i.test(s));
+        let titleRowHasAllCare = false;
+        for (let i = 0; i < Math.min(rows.length, 25); i++) {
+          const row = rows[i] || [];
+          if (row.some((cell: any) => cell && /올\s*케\s*어|all\s*care/i.test(cell.toString()))) {
+            titleRowHasAllCare = true;
+            break;
+          }
+        }
+        const fileHasAllCare = fileNameHasAllCare || sheetNameHasAllCare || titleRowHasAllCare;
+
         // 엑셀에서 헤더(제목) 줄 찾기: 모델명과 관련된 단어가 있는 줄을 유연하게 찾음
         let headerRowIndex = -1;
         let colIndices: Record<string, number> = {};
@@ -110,6 +123,10 @@ export function parseExcel(file: File): Promise<ProductData[]> {
           const downPayment = Math.floor(parseFloat(rawDown.replace(/,/g, '').replace(/[^0-9.-]/g, ''))) || 0;
           
           const rawRowText = row.map((cell: any) => cell ? cell.toString() : '').join(' ');
+          const rowHasAllCare = /올\s*케\s*어|all\s*care/i.test(rawRowText) ||
+                                /올\s*케\s*어|all\s*care/i.test(modelName) ||
+                                (colIndices.category !== -1 && /올\s*케\s*어|all\s*care/i.test(row[colIndices.category]?.toString() || ''));
+          const isAllCare = fileHasAllCare || rowHasAllCare;
 
           products.push({
             id: crypto.randomUUID(),
@@ -125,7 +142,8 @@ export function parseExcel(file: File): Promise<ProductData[]> {
             careServiceDetail: colIndices.careServiceDetail !== -1 ? (row[colIndices.careServiceDetail]?.toString() || '') : '',
             imageUrl: '',
             changeStatus: 'new',
-            rawRowText
+            rawRowText,
+            isAllCare
           });
         }
 

@@ -13,6 +13,7 @@ export interface ProductData {
   imageUrl: string; // User can upload/paste image later
   changeStatus?: 'new' | 'changed' | 'unchanged';
   rawRowText?: string; // 엑셀의 원본 줄 전체 텍스트 (누락된 헤더의 정보까지 검색하기 위함)
+  isAllCare?: boolean; // 올케어 상품 여부 (사용중인 가전 2년 수리비 보증 서비스 포함)
 }
 
 export interface CardBenefit {

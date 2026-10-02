@@ -4,9 +4,10 @@ import { ProductData, CardBenefit, CARD_BENEFITS } from '../types';
 interface PopCardProps {
   product: ProductData;
   cardBenefit: CardBenefit;
+  onToggleAllCare?: (id: string) => void;
 }
 
-export default function PopCard({ product, cardBenefit }: PopCardProps) {
+export default function PopCard({ product, cardBenefit, onToggleAllCare }: PopCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
@@ -68,6 +69,29 @@ export default function PopCard({ product, cardBenefit }: PopCardProps) {
           ))}
         </div>
         
+        {/* All-Care Badge (Screen toggleable) */}
+        {product.isAllCare ? (
+          <button
+            type="button"
+            onClick={() => onToggleAllCare?.(product.id)}
+            title="클릭하여 올케어 적용 해제"
+            className="absolute top-4 left-4 bg-indigo-800 hover:bg-indigo-900 text-yellow-300 px-2.5 py-1 rounded-full text-xs font-black no-print shadow-sm flex items-center gap-1 border border-indigo-600 transition-colors cursor-pointer"
+          >
+            <span>🛡️</span>
+            <span>올케어 적용됨</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onToggleAllCare?.(product.id)}
+            title="클릭하여 올케어 적용"
+            className="absolute top-4 left-4 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-indigo-700 px-2 py-1 rounded-full text-xs font-bold no-print shadow-sm flex items-center gap-1 border border-slate-300 transition-colors opacity-70 hover:opacity-100 cursor-pointer"
+          >
+            <span>+</span>
+            <span>올케어</span>
+          </button>
+        )}
+
         {/* Status Badge (Only visible on screen, hidden on print) */}
         {product.changeStatus === 'new' && (
           <div className="absolute top-4 right-4 bg-green-500 text-white px-2 py-1 rounded text-xs font-bold no-print shadow-sm">
@@ -83,10 +107,27 @@ export default function PopCard({ product, cardBenefit }: PopCardProps) {
         <h1 className="text-3xl font-black text-slate-800 tracking-tight leading-tight">
           구독하면 <span className="text-blue-700 italic text-4xl">더!</span> 합리적인 선택
         </h1>
-        <div className="mt-2 bg-slate-800 text-white inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold shadow-md">
-          <span className="text-yellow-400 mr-2">초기 비용 부담 ZERO!</span>
-          <span className="border-l border-slate-500 pl-2">초기 부담 없이 바로 시작하세요!</span>
-        </div>
+        {product.isAllCare ? (
+          <div className="mt-2 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white px-3 py-1.5 rounded-xl shadow-md border-2 border-amber-400/70 flex flex-col items-center">
+            <div className="flex items-center gap-1.5 text-[13px] font-black tracking-tight text-amber-300">
+              <span className="text-sm">🛡️</span>
+              <span className="bg-amber-400 text-slate-950 text-[10px] px-1.5 py-0.5 rounded font-black mr-0.5 leading-none">올케어 혜택</span>
+              <span>사용중인 가전 2년 수리비 보증 서비스 추가</span>
+            </div>
+            <div className="flex items-center justify-center gap-2 text-[9.5px] text-slate-200 font-medium mt-0.5 flex-wrap">
+              <span>총 2년 보증 (면책 60일)</span>
+              <span className="text-amber-400 font-bold">•</span>
+              <span>연 100만원 한도 (횟수 무제한)</span>
+              <span className="text-amber-400 font-bold">•</span>
+              <span className="text-amber-200 font-bold">1회 5천원 (10년↑ 5만원)</span>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-2 bg-slate-800 text-white inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold shadow-md">
+            <span className="text-yellow-400 mr-2">초기 비용 부담 ZERO!</span>
+            <span className="border-l border-slate-500 pl-2">초기 부담 없이 바로 시작하세요!</span>
+          </div>
+        )}
       </div>
 
       {/* Main Price Box */}
@@ -211,19 +252,47 @@ export default function PopCard({ product, cardBenefit }: PopCardProps) {
         </div>
 
         {/* Box 3 */}
-        <div className="border border-slate-800 rounded-lg overflow-hidden flex flex-col text-[10px]">
-          <div className="bg-slate-800 text-white text-center py-1.5 font-bold">카드 사용 꿀팁!</div>
-          <div className="p-3 flex-1 flex flex-col justify-center gap-1.5">
-            {['개인 보험 자동이체', '휴대폰 요금 자동이체', '학원비 자동이체', '생활비 결제'].map((tip, i) => (
-              <div key={i} className="flex items-center gap-1.5">
-                <svg className="w-3 h-3 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="font-bold text-slate-700">{tip}</span>
+        {product.isAllCare ? (
+          <div className="border border-indigo-900 rounded-lg overflow-hidden flex flex-col text-[10px] bg-indigo-50/20">
+            <div className="bg-indigo-950 text-amber-300 text-center py-1.5 font-bold flex items-center justify-center gap-1">
+              <span>🛡️</span>
+              <span>사용중 가전 2년 보증</span>
+            </div>
+            <div className="p-2 flex-1 flex flex-col justify-between text-[9px] leading-tight">
+              <div className="flex items-center gap-1">
+                <span className="text-indigo-900 font-black shrink-0">· 보증기간:</span>
+                <span className="font-extrabold text-slate-800">총 2년 <span className="text-slate-500 font-normal text-[8px]">(면책 60일)</span></span>
               </div>
-            ))}
+              <div className="flex items-center gap-1">
+                <span className="text-indigo-900 font-black shrink-0">· 보상한도:</span>
+                <span className="font-extrabold text-slate-800">연 100만원 <span className="text-blue-700 font-extrabold text-[8.5px]">(무제한)</span></span>
+              </div>
+              <div className="border-t border-slate-200 pt-1 mt-0.5">
+                <div className="flex items-center gap-1">
+                  <span className="text-indigo-900 font-black shrink-0">· 1회 자부담:</span>
+                  <span className="font-black text-red-600">5,000원</span>
+                </div>
+                <div className="text-[7.5px] text-slate-500 font-medium pl-1 mt-0.5 leading-none">
+                  (제조 10년 이상 상품은 1회 5만원)
+                </div>
+              </div>
+            </div>
           </div>
-              </div>
+        ) : (
+          <div className="border border-slate-800 rounded-lg overflow-hidden flex flex-col text-[10px]">
+            <div className="bg-slate-800 text-white text-center py-1.5 font-bold">카드 사용 꿀팁!</div>
+            <div className="p-3 flex-1 flex flex-col justify-center gap-1.5">
+              {['개인 보험 자동이체', '휴대폰 요금 자동이체', '학원비 자동이체', '생활비 결제'].map((tip, i) => (
+                <div key={i} className="flex items-center gap-1.5">
+                  <svg className="w-3 h-3 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="font-bold text-slate-700">{tip}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
       </div>
 

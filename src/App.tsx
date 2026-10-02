@@ -76,7 +76,15 @@ export default function App() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   
   // Print Mode
-  const [printMode, setPrintMode] = useState<'all' | 'changed' | 'new'>('all');
+  const [printMode, setPrintMode] = useState<'all' | 'changed' | 'new' | 'allcare' | 'standard'>('all');
+
+  const handleToggleAllCare = (id: string) => {
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, isAllCare: !p.isAllCare } : p));
+  };
+
+  const handleSetAllCare = (enable: boolean) => {
+    setProducts(prev => prev.map(p => ({ ...p, isAllCare: enable })));
+  };
 
   const [apiKey, setApiKey] = useState('');
   const [aiModel, setAiModel] = useState('gemini-3.5-flash');
@@ -124,7 +132,11 @@ export default function App() {
                 newProductsList[existingIndex] = { ...parsed, id: existing.id, changeStatus: 'changed' };
               } else {
                 // 변동 없음
-                newProductsList[existingIndex] = { ...existing, changeStatus: 'unchanged' };
+                newProductsList[existingIndex] = {
+                  ...existing,
+                  isAllCare: parsed.isAllCare !== undefined ? parsed.isAllCare : existing.isAllCare,
+                  changeStatus: 'unchanged'
+                };
               }
             } else {
               // 새로 추가
@@ -213,6 +225,8 @@ export default function App() {
   const displayedProducts = products.filter(p => {
     if (printMode === 'changed') return p.changeStatus === 'changed';
     if (printMode === 'new') return p.changeStatus === 'new';
+    if (printMode === 'allcare') return !!p.isAllCare;
+    if (printMode === 'standard') return !p.isAllCare;
     return true; // 'all'
   });
 
@@ -278,9 +292,15 @@ export default function App() {
                     onChange={(e) => setPrintMode(e.target.value as any)}
                     className="bg-transparent border-none text-sm font-medium focus:ring-0 cursor-pointer pr-8 py-0.5"
                   >
-                    <option value="all">전체 인쇄</option>
-                    <option value="changed">가격 변동 모델만</option>
-                    <option value="new">새로 추가된 모델만</option>
+                    <option value="all">전체 인쇄 ({products.length})</option>
+                    {products.some(p => p.isAllCare) && (
+                      <option value="allcare">🛡️ 올케어 모델만 ({products.filter(p => p.isAllCare).length})</option>
+                    )}
+                    {products.some(p => !p.isAllCare) && products.some(p => p.isAllCare) && (
+                      <option value="standard">일반 모델만 ({products.filter(p => !p.isAllCare).length})</option>
+                    )}
+                    <option value="changed">가격 변동 모델만 ({products.filter(p => p.changeStatus === 'changed').length})</option>
+                    <option value="new">새로 추가된 모델만 ({products.filter(p => p.changeStatus === 'new').length})</option>
                   </select>
                 </div>
               )}
@@ -380,6 +400,7 @@ export default function App() {
                   key={product.id} 
                   product={product} 
                   cardBenefit={selectedCard}
+                  onToggleAllCare={handleToggleAllCare}
                 />
               ))}
             </div>
@@ -400,7 +421,7 @@ export default function App() {
                     <div key={product.id} className="w-[148.5mm] h-[210mm] flex items-center justify-center box-border shrink-0">
                       <div className="w-full h-full flex items-center justify-center print:p-[6mm]">
                         <div className="w-full h-full relative">
-                          <PopCard product={product} cardBenefit={selectedCard} />
+                          <PopCard product={product} cardBenefit={selectedCard} onToggleAllCare={handleToggleAllCare} />
                         </div>
                       </div>
                     </div>
@@ -441,7 +462,26 @@ export default function App() {
                 <div className="flex justify-between items-center text-sm text-slate-500 border-t border-slate-200 pt-2 mt-2">
                   <span>새로 추가됨: {products.filter(p => p.changeStatus === 'new').length}</span>
                   <span>가격 변동: {products.filter(p => p.changeStatus === 'changed').length}</span>
+                  <span className="text-indigo-700 font-bold">올케어 적용: {products.filter(p => p.isAllCare).length}개</span>
                 </div>
+                {products.length > 0 && (
+                  <div className="flex gap-2 pt-2 border-t border-slate-200 text-xs mt-2">
+                    <button
+                      type="button"
+                      onClick={() => handleSetAllCare(true)}
+                      className="flex-1 py-1.5 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg border border-indigo-200 transition-colors"
+                    >
+                      🛡️ 전체 올케어로 변경
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSetAllCare(false)}
+                      className="flex-1 py-1.5 px-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg border border-slate-200 transition-colors"
+                    >
+                      전체 일반으로 변경
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4">
@@ -450,7 +490,8 @@ export default function App() {
                     <Upload className="w-6 h-6 mb-1" />
                     <span>{loading ? '처리 중...' : '엑셀 자료 추가 업로드 (비교/병합)'}</span>
                     <span className="text-xs font-normal text-blue-500 text-center">
-                      기존 자료가 있을 경우 모델명을 비교하여<br/>가격이 변경된 모델을 추적합니다. (구독료 0원 제외)
+                      파일명/시트명/제목에 '올케어'가 적혀 있으면<br/>
+                      <strong>[사용중인가전 2년수리비보증서비스추가]</strong>가 자동 적용됩니다.
                     </span>
                   </div>
                   <input 
