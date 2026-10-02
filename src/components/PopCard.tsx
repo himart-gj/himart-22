@@ -108,21 +108,12 @@ export default function PopCard({ product, cardBenefit, onToggleAllCare }: PopCa
           구독하면 <span className="text-blue-700 italic text-4xl">더!</span> 합리적인 선택
         </h1>
         {product.isAllCare ? (
-          <div className="mt-2 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white px-3 py-1.5 rounded-xl shadow-md border-2 border-amber-400/70 flex flex-col items-center">
-            <div className="flex items-center gap-1.5 text-[12.5px] font-black tracking-tight text-amber-300">
-              <span className="text-sm">🛡️</span>
-              <span className="bg-amber-400 text-slate-950 text-[10px] px-1.5 py-0.5 rounded font-black mr-0.5 leading-none">올케어 혜택</span>
-              <span>사용중인 가전 2년 수리비 보증 서비스 추가</span>
-            </div>
-            <div className="flex items-center justify-center gap-1.5 text-[9px] text-slate-200 font-medium mt-0.5 flex-wrap">
-              <span className="bg-white/15 px-1.5 py-0.2 rounded text-yellow-300 font-bold">총 34개 품목 (대형8·생활주방21·IT5)</span>
-              <span className="text-amber-400 font-bold">•</span>
-              <span>총 2년 보증 (면책 60일)</span>
-              <span className="text-amber-400 font-bold">•</span>
-              <span className="text-amber-300 font-bold">총 200만원 한도 (연간 100만원/무제한)</span>
-              <span className="text-amber-400 font-bold">•</span>
-              <span className="text-amber-200 font-bold">1회 5천원 (10년↑ 5만원)</span>
-            </div>
+          <div className="mt-2 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white px-4 py-2 rounded-xl shadow-md border-2 border-amber-400 inline-flex items-center justify-center gap-2">
+            <span className="text-base">🛡️</span>
+            <span className="bg-amber-400 text-slate-950 text-xs px-2 py-0.5 rounded-full font-black tracking-tight">올케어 혜택</span>
+            <span className="text-[13.5px] font-black text-amber-300 tracking-tight">
+              사용중인 가전 2년 수리비 보증 서비스
+            </span>
           </div>
         ) : (
           <div className="mt-2 bg-slate-800 text-white inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold shadow-md">
@@ -273,17 +264,22 @@ export default function PopCard({ product, cardBenefit, onToggleAllCare }: PopCa
                   <span className="text-indigo-900 font-black shrink-0">· 대상가전:</span>
                   <span className="font-extrabold text-blue-800">총 34개 품목</span>
                 </div>
-                <div className="text-[7.5px] text-slate-500 pl-2 leading-none mt-0.5">
-                  (대형 8, 생활·주방 21, IT 5)
+                <div className="text-[7.5px] text-slate-600 pl-2 leading-none mt-0.5 font-medium">
+                  (대형 8개, 생활/주방 21개, IT 5개)
                 </div>
               </div>
               <div className="flex items-center gap-1 mt-0.5">
                 <span className="text-indigo-900 font-black shrink-0">· 보증기간:</span>
                 <span className="font-extrabold text-slate-800">총 2년 <span className="text-slate-500 font-normal text-[7.5px]">(면책 60일)</span></span>
               </div>
-              <div className="flex items-center gap-1">
-                <span className="text-indigo-900 font-black shrink-0">· 보상한도:</span>
-                <span className="font-extrabold text-slate-800">총 200만원 <span className="text-blue-700 font-extrabold text-[7.5px]">(연100만/무제한)</span></span>
+              <div>
+                <div className="flex items-center gap-1">
+                  <span className="text-indigo-900 font-black shrink-0">· 보상한도:</span>
+                  <span className="font-extrabold text-slate-800">총 200만원 한도</span>
+                </div>
+                <div className="text-[7.5px] text-blue-700 pl-2 leading-none mt-0.5 font-bold">
+                  (연간 100만원 한도)
+                </div>
               </div>
               <div className="border-t border-slate-200 pt-0.5 mt-0.5">
                 <div className="flex items-center gap-1">
