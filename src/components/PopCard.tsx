@@ -160,11 +160,17 @@ export default function PopCard({ product, cardBenefit, onToggleAllCare }: PopCa
           </div>
           <div className="font-extrabold text-slate-800 text-lg">{product.period}개월</div>
         </div>
-        <div className="border border-slate-200 rounded-lg p-3 text-center bg-white shadow-sm flex flex-col justify-center">
-          <div className="text-[10px] font-bold text-slate-500 mb-0.5 flex items-center justify-center gap-1">
+        <div className="border border-slate-200 rounded-lg p-2.5 text-center bg-white shadow-sm flex flex-col justify-center min-h-[64px]">
+          <div className="text-[10px] font-bold text-slate-400 mb-0.5 flex items-center justify-center gap-1">
             <span>🏷️</span> 제품 모델명
-            {product.category && <span className="text-blue-600 ml-1 font-black">[{product.category}]</span>}
           </div>
+          {product.category && (
+            <div className="mb-0.5">
+              <span className="inline-block bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded text-[10px] font-black leading-tight break-words max-w-full">
+                [{product.category}]
+              </span>
+            </div>
+          )}
           <div className="font-bold text-slate-800 text-[11px] break-all leading-tight">
             {product.modelName}
           </div>

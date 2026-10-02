@@ -15,6 +15,28 @@ const HEADER_ALIASES = {
   careServiceDetail: ['안심케어4', '정기케어4', '보증기간', '상세', '서비스내용', '내용']
 };
 
+/**
+ * 맥OS/윈도우/iOS 유니코드 차이(NFD/NFC) 및 공백/특수문자를 무시하고 '올케어' 여부를 정밀 판별
+ */
+export function isAllCareText(text: any): boolean {
+  if (!text) return false;
+  try {
+    const raw = text.toString();
+    // NFC 정규화 및 NFD 분리된 자음/모음도 모두 검사
+    const nfc = raw.normalize('NFC').replace(/[\s\-_[\]()（）<>【】·,.]+/g, '').toLowerCase();
+    if (nfc.includes('올케어') || nfc.includes('allcare')) {
+      return true;
+    }
+    // 자모 분리 상태(NFD) 직접 정규식 체크: ㅇ(110b) ㅗ(1169) ㄹ(11af) ㅋ(110f) ㅔ(1166) ㅇ(110b) ㅓ(1165)
+    if (/[\u110b\u3147][\u1169\u3157][\u11af\u3139][\u110f\u314b][\u1166\u3154][\u110b\u3147][\u1165\u3153]/.test(raw)) {
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 function findColumnIndex(headers: string[], aliases: string[], excludeTokens: string[] = []): number {
   const normalizedHeaders = headers.map(h => h?.toString().replace(/\s+/g, '').toLowerCase() || '');
   const normalizedAliases = aliases.map(a => a.replace(/\s+/g, '').toLowerCase());
@@ -54,13 +76,13 @@ export function parseExcel(file: File): Promise<ProductData[]> {
         
         const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
         
-        // 올케어 여부 감지 (파일명, 시트명, 상위 제목/안내 행 검사)
-        const fileNameHasAllCare = /올\s*케\s*어|all\s*care/i.test(file.name || '');
-        const sheetNameHasAllCare = (workbook.SheetNames || []).some(s => /올\s*케\s*어|all\s*care/i.test(s));
+        // 올케어 여부 감지 (파일명, 시트명, 상위 제목/안내 행, 전체 시트 텍스트 검사)
+        const fileNameHasAllCare = isAllCareText(file.name);
+        const sheetNameHasAllCare = (workbook.SheetNames || []).some(s => isAllCareText(s));
         let titleRowHasAllCare = false;
-        for (let i = 0; i < Math.min(rows.length, 25); i++) {
+        for (let i = 0; i < Math.min(rows.length, 30); i++) {
           const row = rows[i] || [];
-          if (row.some((cell: any) => cell && /올\s*케\s*어|all\s*care/i.test(cell.toString()))) {
+          if (row.some((cell: any) => isAllCareText(cell))) {
             titleRowHasAllCare = true;
             break;
           }
@@ -123,9 +145,11 @@ export function parseExcel(file: File): Promise<ProductData[]> {
           const downPayment = Math.floor(parseFloat(rawDown.replace(/,/g, '').replace(/[^0-9.-]/g, ''))) || 0;
           
           const rawRowText = row.map((cell: any) => cell ? cell.toString() : '').join(' ');
-          const rowHasAllCare = /올\s*케\s*어|all\s*care/i.test(rawRowText) ||
-                                /올\s*케\s*어|all\s*care/i.test(modelName) ||
-                                (colIndices.category !== -1 && /올\s*케\s*어|all\s*care/i.test(row[colIndices.category]?.toString() || ''));
+          const rowHasAllCare = isAllCareText(rawRowText) ||
+                                isAllCareText(modelName) ||
+                                (colIndices.category !== -1 && isAllCareText(row[colIndices.category])) ||
+                                (colIndices.careServiceText !== -1 && isAllCareText(row[colIndices.careServiceText])) ||
+                                (colIndices.careServiceDetail !== -1 && isAllCareText(row[colIndices.careServiceDetail]));
           const isAllCare = fileHasAllCare || rowHasAllCare;
 
           products.push({

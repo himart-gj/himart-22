@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, FileSpreadsheet, Printer, CreditCard, Settings, Trash2, X, PlusCircle, Filter, Download, FileText } from 'lucide-react';
 import { ProductData, CardBenefit, CARD_BENEFITS } from './types';
-import { parseExcel } from './lib/excel';
+import { parseExcel, isAllCareText } from './lib/excel';
 import PopCard from './components/PopCard';
 import domToImage from 'dom-to-image-more';
 import jsPDF from 'jspdf';
@@ -74,6 +74,7 @@ export default function App() {
   // Modals
   const [isDataModalOpen, setIsDataModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [uploadSuccessMessage, setUploadSuccessMessage] = useState<string | null>(null);
   
   // Print Mode
   const [printMode, setPrintMode] = useState<'all' | 'changed' | 'new' | 'allcare' | 'standard'>('all');
@@ -111,33 +112,36 @@ export default function App() {
     setLoading(true);
     setError(null);
     try {
+      const isFileAllCare = isAllCareText(file.name);
       const parsedProducts = await parseExcel(file);
       if (parsedProducts.length === 0) {
         setError('데이터를 찾을 수 없거나 구독료가 0원인 항목만 있습니다.');
       } else {
+        // 파일명이나 엑셀 내용에 올케어가 포함되어 있다면 전체 올케어로 강제 적용
+        const isAllCareUpload = isFileAllCare || parsedProducts.some(p => p.isAllCare);
+        const finalProducts = isAllCareUpload 
+          ? parsedProducts.map(p => ({ ...p, isAllCare: true }))
+          : parsedProducts;
+
         // 기존 데이터와 비교 (Diff Logic)
         if (products.length === 0) {
           // 최초 업로드면 모두 'new'
-          setProducts(parsedProducts.map(p => ({ ...p, changeStatus: 'new' })));
+          setProducts(finalProducts.map(p => ({ ...p, changeStatus: 'new' })));
         } else {
-          // 기존 데이터 병합 및 비교
+          // 기존 데이터 병합 및 비교 (올케어 파일 업로드 시 올케어 상태 덮어쓰기)
           const newProductsList = [...products];
           
-          parsedProducts.forEach(parsed => {
+          finalProducts.forEach(parsed => {
             const existingIndex = newProductsList.findIndex(p => p.modelName === parsed.modelName);
             if (existingIndex >= 0) {
               const existing = newProductsList[existingIndex];
-              if (existing.monthlyFee !== parsed.monthlyFee) {
-                // 가격 변동
-                newProductsList[existingIndex] = { ...parsed, id: existing.id, changeStatus: 'changed' };
-              } else {
-                // 변동 없음
-                newProductsList[existingIndex] = {
-                  ...existing,
-                  isAllCare: parsed.isAllCare !== undefined ? parsed.isAllCare : existing.isAllCare,
-                  changeStatus: 'unchanged'
-                };
-              }
+              newProductsList[existingIndex] = {
+                ...existing,
+                ...parsed,
+                id: existing.id,
+                isAllCare: isAllCareUpload ? true : (parsed.isAllCare ?? existing.isAllCare),
+                changeStatus: existing.monthlyFee !== parsed.monthlyFee ? 'changed' : 'unchanged'
+              };
             } else {
               // 새로 추가
               newProductsList.push({ ...parsed, changeStatus: 'new' });
@@ -146,6 +150,15 @@ export default function App() {
           
           setProducts(newProductsList);
         }
+
+        // 업로드 성공 알림 및 모달 닫기
+        setIsDataModalOpen(false);
+        if (isAllCareUpload) {
+          setUploadSuccessMessage('🛡️ [올케어] 자료가 감지되어 [사용중인 가전 2년 수리비 보증] 혜택이 자동 적용되었습니다!');
+        } else {
+          setUploadSuccessMessage(`${finalProducts.length}개 모델이 성공적으로 로드되었습니다.`);
+        }
+        setTimeout(() => setUploadSuccessMessage(null), 5000);
       }
     } catch (err: any) {
       setError(err.message || '파일 처리 중 오류가 발생했습니다.');
@@ -304,6 +317,26 @@ export default function App() {
                   </select>
                 </div>
               )}
+
+              {/* All-Care Quick Mode Switch */}
+              {products.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const anyAllCare = products.some(p => p.isAllCare);
+                    handleSetAllCare(!anyAllCare);
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors shrink-0 shadow-sm cursor-pointer ${
+                    products.some(p => p.isAllCare)
+                      ? 'bg-indigo-900 text-yellow-300 border-indigo-700 hover:bg-indigo-950'
+                      : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                  }`}
+                  title="클릭하여 전체 카드의 올케어(사용중인가전 2년 수리비 보증)를 켜거나 끕니다"
+                >
+                  <span className="text-sm">🛡️</span>
+                  <span>올케어 {products.some(p => p.isAllCare) ? '적용중 (ON)' : '미적용 (OFF)'}</span>
+                </button>
+              )}
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
@@ -350,6 +383,20 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      {/* Upload Notification Toast Banner */}
+      {uploadSuccessMessage && (
+        <div className="bg-indigo-700 text-white text-center py-2.5 px-4 text-sm font-bold shadow-md no-print flex items-center justify-center gap-2 border-b border-indigo-800">
+          <span>🛡️</span>
+          <span>{uploadSuccessMessage}</span>
+          <button 
+            onClick={() => setUploadSuccessMessage(null)} 
+            className="ml-3 text-indigo-200 hover:text-white text-xs bg-indigo-800 px-2 py-0.5 rounded cursor-pointer"
+          >
+            닫기 ✕
+          </button>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 print:p-0 print:max-w-none flex flex-col">
