@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, FileSpreadsheet, Printer, CreditCard, Settings, Trash2, X, PlusCircle, Filter, Download, FileText } from 'lucide-react';
+import { Upload, FileSpreadsheet, Printer, CreditCard, Settings, Trash2, X, PlusCircle, Filter, Download, FileText, Camera, Sparkles } from 'lucide-react';
 import { ProductData, CardBenefit, CARD_BENEFITS } from './types';
 import { parseExcel, isAllCareText } from './lib/excel';
 import PopCard from './components/PopCard';
+import ImageScannerModal from './components/ImageScannerModal';
 import domToImage from 'dom-to-image-more';
 import jsPDF from 'jspdf';
 
@@ -74,6 +75,8 @@ export default function App() {
   // Modals
   const [isDataModalOpen, setIsDataModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isImageScannerOpen, setIsImageScannerOpen] = useState(false);
+  const [scannerInitialImage, setScannerInitialImage] = useState<string | null>(null);
   const [uploadSuccessMessage, setUploadSuccessMessage] = useState<string | null>(null);
   
   // Print Mode
@@ -86,6 +89,53 @@ export default function App() {
   const handleSetAllCare = (enable: boolean) => {
     setProducts(prev => prev.map(p => ({ ...p, isAllCare: enable })));
   };
+
+  const handleAddProductFromScanner = (newProduct: ProductData) => {
+    setProducts(prev => {
+      const idx = prev.findIndex(p => p.modelName === newProduct.modelName);
+      if (idx >= 0) {
+        const updated = [...prev];
+        updated[idx] = { ...updated[idx], ...newProduct, changeStatus: 'changed' };
+        return updated;
+      }
+      return [newProduct, ...prev];
+    });
+    setUploadSuccessMessage(
+      `📸 [${newProduct.category || '가전'}] ${newProduct.modelName} 모델이 견적서 사진에서 인식되어 POP 목록에 추가되었습니다!`
+    );
+    setTimeout(() => setUploadSuccessMessage(null), 6000);
+  };
+
+  // 전역 클립보드 이미지 붙여넣기(Ctrl+V) 리스너
+  useEffect(() => {
+    const handleGlobalPaste = (e: ClipboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+        return;
+      }
+
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              setScannerInitialImage(event.target?.result as string);
+              setIsImageScannerOpen(true);
+            };
+            reader.readAsDataURL(file);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('paste', handleGlobalPaste);
+    return () => window.removeEventListener('paste', handleGlobalPaste);
+  }, []);
 
   const [apiKey, setApiKey] = useState('');
   const [aiModel, setAiModel] = useState('gemini-3.5-flash');
@@ -262,15 +312,27 @@ export default function App() {
             </div>
             <div className="flex items-center gap-2">
               <button
+                type="button"
+                onClick={() => {
+                  setScannerInitialImage(null);
+                  setIsImageScannerOpen(true);
+                }}
+                className="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-700 hover:to-indigo-700 text-white px-3.5 py-1.5 rounded-lg text-sm font-black shadow-sm transition-all cursor-pointer"
+                title="스마트폰 견적 화면 사진이나 캡처 이미지를 AI가 자동으로 읽어 POP 카드로 만듭니다 (Ctrl+V 붙여넣기 지원)"
+              >
+                <Camera className="w-4 h-4 text-amber-300" />
+                <span>사진/캡처 견적서 AI 등록</span>
+              </button>
+              <button
                 onClick={() => setIsDataModalOpen(true)}
-                className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-sm font-bold border border-blue-200 hover:bg-blue-100 transition-colors"
+                className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-sm font-bold border border-blue-200 hover:bg-blue-100 transition-colors cursor-pointer"
               >
                 <Upload className="w-4 h-4" />
-                자료 관리
+                자료 관리 (엑셀)
               </button>
               <button
                 onClick={() => setIsSettingsModalOpen(true)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -406,14 +468,29 @@ export default function App() {
           <div className="flex-1 flex flex-col items-center justify-center no-print pb-20">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-slate-800 mb-2">현재 등록된 POP 자료가 없습니다.</h2>
-              <p className="text-slate-500">우측 상단의 '자료 관리' 버튼을 눌러 엑셀 데이터를 업로드해주세요.</p>
-              <button
-                onClick={() => setIsDataModalOpen(true)}
-                className="mt-6 inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-md hover:bg-blue-700 transition-colors"
-              >
-                <PlusCircle className="w-5 h-5" />
-                자료 업로드 시작하기
-              </button>
+              <p className="text-slate-500">엑셀 파일을 올리거나, 견적서/POS 사진을 찍어 AI로 바로 등록해보세요.</p>
+              
+              <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setScannerInitialImage(null);
+                    setIsImageScannerOpen(true);
+                  }}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white px-6 py-3.5 rounded-xl font-black shadow-md hover:from-purple-700 hover:to-indigo-700 transition-all cursor-pointer text-sm"
+                >
+                  <Camera className="w-5 h-5 text-amber-300" />
+                  견적서 사진 / 캡처 AI로 자동인식
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsDataModalOpen(true)}
+                  className="inline-flex items-center gap-2 bg-white text-slate-700 border-2 border-slate-300 px-6 py-3.5 rounded-xl font-bold shadow-sm hover:bg-slate-50 transition-colors cursor-pointer text-sm"
+                >
+                  <Upload className="w-5 h-5 text-blue-600" />
+                  엑셀 파일 일괄 등록
+                </button>
+              </div>
             </div>
             
             <div className="opacity-40 pointer-events-none transform scale-75 origin-top filter grayscale blur-[1px]">
@@ -531,11 +608,41 @@ export default function App() {
                 )}
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
+                {/* 1. 견적서/POS 사진 AI 인식 버튼 */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDataModalOpen(false);
+                    setScannerInitialImage(null);
+                    setIsImageScannerOpen(true);
+                  }}
+                  className="w-full flex items-center justify-between p-4 text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-md transition-all cursor-pointer text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center shrink-0">
+                      <Camera className="w-5 h-5 text-amber-300" />
+                    </div>
+                    <div>
+                      <div className="font-black text-sm flex items-center gap-1.5">
+                        견적서 / POS 사진 AI 자동 인식
+                        <span className="bg-amber-400 text-slate-950 text-[10px] px-1.5 py-0.2 rounded font-black">
+                          카메라/캡처
+                        </span>
+                      </div>
+                      <div className="text-xs text-indigo-100 mt-0.5 font-normal">
+                        스마트폰 사진이나 화면 캡처(Ctrl+V)로 POP 카드 즉시 생성
+                      </div>
+                    </div>
+                  </div>
+                  <Sparkles className="w-5 h-5 text-amber-300 shrink-0" />
+                </button>
+
+                {/* 2. 엑셀 파일 업로드 */}
                 <label className="relative flex items-center justify-center w-full px-6 py-4 text-sm font-bold text-blue-700 bg-blue-50 border-2 border-blue-200 border-dashed rounded-xl cursor-pointer hover:bg-blue-100 hover:border-blue-300 transition-colors">
                   <div className="flex flex-col items-center gap-1">
                     <Upload className="w-6 h-6 mb-1" />
-                    <span>{loading ? '처리 중...' : '엑셀 자료 추가 업로드 (비교/병합)'}</span>
+                    <span>{loading ? '처리 중...' : '엑셀 자료 추가 업로드 (.xlsx, .xls, .csv)'}</span>
                     <span className="text-xs font-normal text-blue-500 text-center">
                       파일명/시트명/제목에 '올케어'가 적혀 있으면<br/>
                       <strong>[사용중인가전 2년수리비보증서비스추가]</strong>가 자동 적용됩니다.
@@ -680,6 +787,18 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* 견적서/POS 사진 AI 인식 모달 */}
+      <ImageScannerModal
+        isOpen={isImageScannerOpen}
+        onClose={() => {
+          setIsImageScannerOpen(false);
+          setScannerInitialImage(null);
+        }}
+        onAddProduct={handleAddProductFromScanner}
+        initialImage={scannerInitialImage}
+        apiKey={apiKey}
+      />
     </div>
   );
 }
