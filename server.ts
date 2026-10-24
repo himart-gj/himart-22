@@ -14,7 +14,7 @@ async function startServer() {
   // AI 견적서/POS 사진 자동 분석 엔드포인트
   app.post("/api/ai/parse-image", async (req, res) => {
     try {
-      const { image, mimeType = "image/jpeg", apiKey: clientApiKey } = req.body;
+      const { image, mimeType = "image/jpeg", apiKey: clientApiKey, model: clientModel } = req.body;
       if (!image) {
         return res.status(400).json({ success: false, error: "이미지 데이터가 전달되지 않았습니다." });
       }
@@ -48,14 +48,14 @@ async function startServer() {
 4. monthlyFee (월 구독료): 정기 월 구독료/월 납부요금 (숫자 정수). 제휴카드 할인 전 기본 월 구독료 또는 화면에 '월 납부요금', '월 구독료', '월 렌탈료'로 적힌 대표 금액 (예: 약 18,094원이면 18094).
 5. period (구독기간): 구독 개월 수 정수 숫자 (예: 36, 48, 60 등).
 6. downPayment (계약금/선납금): 초기 납부금/계약금 (숫자, 없거나 0원이면 0).
-7. careServiceText (케어서비스): 케어 패키지 또는 서비스 명칭 (예: 안심케어_1, 셀프케어 등).
+7. careServiceText (케어서비스): 케어 패키지 또는 서비스 명칭 (예: 안심케어_1, 셀프케어 등). 이미지에 '3년', '5년', '안심케어3', '정기케어3' 등 무상 A/S 보증기간 관련 문구가 있다면 반드시 원문 그대로 포함할 것.
 8. careServiceCycle (방문/배송주기): 케어 주기 (예: 12/24개월, 3개월 등).
 9. careServiceCount (제공횟수): 케어 제공 횟수 (예: 2회 등).
-10. careServiceDetail (보증/서비스상세): 보장 서비스 및 세부 내용 (예: AS연장보험, 고무패킹 정기배송 등).
+10. careServiceDetail (보증/서비스상세): 보장 서비스 및 세부 내용 (예: AS연장보험, 고무패킹 정기배송 등). 이미지에 '3년', '5년', '안심케어3', '정기케어3' 등 무상 A/S 보증기간 관련 문구가 있다면 반드시 원문 그대로 포함할 것.
 11. isAllCare (올케어 여부): 이미지에 '올케어', 'allcare', '사용중 가전 보증', '2년 수리비 보증' 등이 포함되어 있으면 true, 아니면 false.`;
 
       let responseText = "";
-      const modelsToTry = ["gemini-flash-latest", "gemini-3.1-flash-lite", "gemini-3.8-flash"];
+      const modelsToTry = [req.body.model, "gemini-flash-latest", "gemini-2.5-flash", "gemini-2.5-pro"].filter(Boolean);
       let lastError: any = null;
 
       for (const model of modelsToTry) {

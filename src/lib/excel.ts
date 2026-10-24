@@ -76,19 +76,6 @@ export function parseExcel(file: File): Promise<ProductData[]> {
         
         const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
         
-        // 올케어 여부 감지 (파일명, 시트명, 상위 제목/안내 행, 전체 시트 텍스트 검사)
-        const fileNameHasAllCare = isAllCareText(file.name);
-        const sheetNameHasAllCare = (workbook.SheetNames || []).some(s => isAllCareText(s));
-        let titleRowHasAllCare = false;
-        for (let i = 0; i < Math.min(rows.length, 30); i++) {
-          const row = rows[i] || [];
-          if (row.some((cell: any) => isAllCareText(cell))) {
-            titleRowHasAllCare = true;
-            break;
-          }
-        }
-        const fileHasAllCare = fileNameHasAllCare || sheetNameHasAllCare || titleRowHasAllCare;
-
         // 엑셀에서 헤더(제목) 줄 찾기: 모델명과 관련된 단어가 있는 줄을 유연하게 찾음
         let headerRowIndex = -1;
         let colIndices: Record<string, number> = {};
@@ -122,6 +109,19 @@ export function parseExcel(file: File): Promise<ProductData[]> {
         if (headerRowIndex === -1) {
           throw new Error('엑셀 파일에서 "제품명(모델명)"과 "가격(구독료)" 항목을 찾을 수 없습니다.');
         }
+
+        // 올케어 여부 감지 (파일명, 시트명, 헤더 행 이전 상단 제목줄만 검사)
+        const fileNameHasAllCare = isAllCareText(file.name);
+        const sheetNameHasAllCare = (workbook.SheetNames || []).some(s => isAllCareText(s));
+        let titleRowHasAllCare = false;
+        for (let i = 0; i < headerRowIndex; i++) {
+          const row = rows[i] || [];
+          if (row.some((cell: any) => isAllCareText(cell))) {
+            titleRowHasAllCare = true;
+            break;
+          }
+        }
+        const fileHasAllCare = fileNameHasAllCare || sheetNameHasAllCare || titleRowHasAllCare;
 
         const products: ProductData[] = [];
 

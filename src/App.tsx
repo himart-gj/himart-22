@@ -138,7 +138,7 @@ export default function App() {
   }, []);
 
   const [apiKey, setApiKey] = useState('');
-  const [aiModel, setAiModel] = useState('gemini-3.5-flash');
+  const [aiModel, setAiModel] = useState('gemini-flash-latest');
 
   // Load API key and model from local storage on mount
   React.useEffect(() => {
@@ -162,23 +162,20 @@ export default function App() {
     setLoading(true);
     setError(null);
     try {
-      const isFileAllCare = isAllCareText(file.name);
       const parsedProducts = await parseExcel(file);
       if (parsedProducts.length === 0) {
         setError('데이터를 찾을 수 없거나 구독료가 0원인 항목만 있습니다.');
       } else {
-        // 파일명이나 엑셀 내용에 올케어가 포함되어 있다면 전체 올케어로 강제 적용
-        const isAllCareUpload = isFileAllCare || parsedProducts.some(p => p.isAllCare);
-        const finalProducts = isAllCareUpload 
-          ? parsedProducts.map(p => ({ ...p, isAllCare: true }))
-          : parsedProducts;
+        // parseExcel이 판별한 각 상품의 p.isAllCare 값을 그대로 따름
+        const finalProducts = parsedProducts;
+        const hasAnyAllCare = finalProducts.some(p => p.isAllCare);
 
         // 기존 데이터와 비교 (Diff Logic)
         if (products.length === 0) {
           // 최초 업로드면 모두 'new'
           setProducts(finalProducts.map(p => ({ ...p, changeStatus: 'new' })));
         } else {
-          // 기존 데이터 병합 및 비교 (올케어 파일 업로드 시 올케어 상태 덮어쓰기)
+          // 기존 데이터 병합 및 비교
           const newProductsList = [...products];
           
           finalProducts.forEach(parsed => {
@@ -189,7 +186,7 @@ export default function App() {
                 ...existing,
                 ...parsed,
                 id: existing.id,
-                isAllCare: isAllCareUpload ? true : (parsed.isAllCare ?? existing.isAllCare),
+                isAllCare: parsed.isAllCare ?? existing.isAllCare,
                 changeStatus: existing.monthlyFee !== parsed.monthlyFee ? 'changed' : 'unchanged'
               };
             } else {
@@ -203,7 +200,7 @@ export default function App() {
 
         // 업로드 성공 알림 및 모달 닫기
         setIsDataModalOpen(false);
-        if (isAllCareUpload) {
+        if (hasAnyAllCare) {
           setUploadSuccessMessage('🛡️ [올케어] 자료가 감지되어 [사용중인 가전 2년 수리비 보증] 혜택이 자동 적용되었습니다!');
         } else {
           setUploadSuccessMessage(`${finalProducts.length}개 모델이 성공적으로 로드되었습니다.`);
@@ -728,8 +725,7 @@ export default function App() {
                       onChange={(e) => setAiModel(e.target.value)}
                       className="w-full px-3 py-2 border border-blue-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                     >
-                      <option value="gemini-3.5-flash">gemini-3.5-flash (권장)</option>
-                      <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview</option>
+                      <option value="gemini-flash-latest">gemini-flash-latest (권장)</option>
                       <option value="gemini-2.5-flash">gemini-2.5-flash</option>
                       <option value="gemini-2.5-pro">gemini-2.5-pro</option>
                     </select>
@@ -798,6 +794,7 @@ export default function App() {
         onAddProduct={handleAddProductFromScanner}
         initialImage={scannerInitialImage}
         apiKey={apiKey}
+        model={aiModel}
       />
     </div>
   );

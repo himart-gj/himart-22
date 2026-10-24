@@ -8,6 +8,7 @@ interface ImageScannerModalProps {
   onAddProduct: (product: ProductData) => void;
   initialImage?: string | null;
   apiKey?: string;
+  model?: string;
 }
 
 interface ExtractedData {
@@ -30,6 +31,7 @@ export default function ImageScannerModal({
   onAddProduct,
   initialImage = null,
   apiKey = '',
+  model = '',
 }: ImageScannerModalProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageMime, setImageMime] = useState<string>('image/jpeg');
@@ -115,6 +117,7 @@ export default function ImageScannerModal({
           image: base64Data,
           mimeType,
           apiKey: apiKey || undefined,
+          model: model || undefined,
         }),
       });
 
@@ -487,7 +490,7 @@ export default function ImageScannerModal({
                       {/* 5. 케어서비스 명 */}
                       <div className="col-span-2">
                         <label className="block font-bold text-slate-700 mb-1">
-                          ✨ 케어서비스 / 보증 내용
+                          ✨ 케어서비스 명칭
                         </label>
                         <input
                           type="text"
@@ -495,7 +498,55 @@ export default function ImageScannerModal({
                           onChange={(e) =>
                             setExtractedData({ ...extractedData, careServiceText: e.target.value })
                           }
-                          placeholder="예: 안심케어_1 (셀프케어 2회, 12/24개월)"
+                          placeholder="예: 안심케어_1, 셀프케어"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                      {/* 6. 케어 주기 */}
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">
+                          🔄 방문/배송 주기
+                        </label>
+                        <input
+                          type="text"
+                          value={extractedData.careServiceCycle || ''}
+                          onChange={(e) =>
+                            setExtractedData({ ...extractedData, careServiceCycle: e.target.value })
+                          }
+                          placeholder="예: 12/24개월, 3개월"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                      {/* 7. 제공 횟수 */}
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">
+                          🔢 제공 횟수
+                        </label>
+                        <input
+                          type="text"
+                          value={extractedData.careServiceCount || ''}
+                          onChange={(e) =>
+                            setExtractedData({ ...extractedData, careServiceCount: e.target.value })
+                          }
+                          placeholder="예: 2회, 12회"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+
+                      {/* 8. 보증/서비스 상세 */}
+                      <div className="col-span-2">
+                        <label className="block font-bold text-slate-700 mb-1">
+                          🛠️ 보증 / 서비스 상세 (무상 A/S 연수 등)
+                        </label>
+                        <input
+                          type="text"
+                          value={extractedData.careServiceDetail || ''}
+                          onChange={(e) =>
+                            setExtractedData({ ...extractedData, careServiceDetail: e.target.value })
+                          }
+                          placeholder="예: 5년 무상 A/S, AS연장보험, 고무패킹 정기배송"
                           className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                       </div>

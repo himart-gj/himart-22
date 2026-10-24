@@ -99,7 +99,7 @@ export default function PopCard({ product, cardBenefit, onToggleAllCare }: PopCa
           </div>
         )}
         {product.changeStatus === 'changed' && (
-          <div className="absolute top-4 right-4 bg-slate-1000 text-white px-2 py-1 rounded text-xs font-bold no-print shadow-sm">
+          <div className="absolute top-4 right-4 bg-amber-500 text-white px-2 py-1 rounded text-xs font-bold no-print shadow-sm">
             UPDATE 가격변동
           </div>
         )}
