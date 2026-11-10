@@ -70,7 +70,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCardId, setSelectedCardId] = useState<string>(CARD_BENEFITS[0].id);
+  const [selectedCardId, setSelectedCardId] = useState<string>('lotte');
   
   // Modals
   const [isDataModalOpen, setIsDataModalOpen] = useState(false);
