@@ -108,25 +108,57 @@ export default function ImageScannerModal({
     setError(null);
 
     try {
-      const res = await fetch('/api/ai/parse-image', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          image: base64Data,
-          mimeType,
-          apiKey: apiKey || undefined,
-          model: model || undefined,
-        }),
-      });
+      let shouldFallbackToClient = false;
 
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.error || '견적서 사진을 분석하지 못했습니다.');
+      try {
+        const res = await fetch('/api/ai/parse-image', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            image: base64Data,
+            mimeType,
+            apiKey: apiKey || undefined,
+            model: model || undefined,
+          }),
+        });
+
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const json = await res.json();
+          if (!res.ok || !json.success) {
+            throw new Error(json.error || '견적서 사진을 분석하지 못했습니다.');
+          }
+          setExtractedData(json.data);
+          return;
+        }
+
+        // 정적 호스팅(GitHub Pages 등)에서 404/405 HTML이 반환된 경우 브라우저 직접 호출로 폴백
+        shouldFallbackToClient = true;
+      } catch (serverErr: any) {
+        if (serverErr instanceof TypeError) {
+          shouldFallbackToClient = true;
+        } else {
+          throw serverErr;
+        }
       }
 
-      setExtractedData(json.data);
+      if (shouldFallbackToClient) {
+        if (!apiKey.trim()) {
+          throw new Error(
+            '정적 배포(GitHub Pages) 환경에서는 우측 상단 ⚙️ 설정 버튼에서 Gemini API Key를 먼저 입력해 주세요.'
+          );
+        }
+        const { parseQuoteImageWithGemini } = await import('../lib/parseImageWithGemini');
+        const data = await parseQuoteImageWithGemini({
+          image: base64Data,
+          mimeType,
+          apiKey: apiKey.trim(),
+          preferredModel: model || undefined,
+        });
+        setExtractedData(data);
+      }
     } catch (err: any) {
       console.error(err);
       setError(err.message || '사진 분석 중 오류가 발생했습니다. 다시 시도해주세요.');
