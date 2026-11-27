@@ -22,7 +22,6 @@ const CHUNKS: ChunkSpec[] = [
 const EXPECTED_TOTAL_BYTES = 41715336;
 const EXPECTED_SHA256 = "245b72be7c359bfd7d60af5978eab62194352e468f5b1a27fff4c3cea21984bf";
 
-const KEPCO26_DRIVE_MP4_ID = "11d84P4M-WB-94MjoTRXnYv8h54NJgObT";
 const KEPCO26_DRIVE_COVER_ID = "1n_e0jLZPjW1PnSODbLIZLa0Ea2z4RR-I";
 
 async function downloadDriveFile(id: string, expectedBytes?: number, expectedSha?: string): Promise<Buffer> {
@@ -75,38 +74,11 @@ function buildDishwasherCareReel(outDir: string): void {
   console.log(`Published UHD 60FPS master (${stat.size} bytes) to dist/reels/dishwasher_washer_care_uhd_60fps.mp4`);
 }
 
-async function publishKepcoRebate2026Reel(outDir: string): Promise<void> {
-  ensureFfmpegAndFonts();
+async function publishKepcoRebate2026CoverOnly(outDir: string): Promise<void> {
   const coverBuf = await downloadDriveFile(KEPCO26_DRIVE_COVER_ID);
   const coverOut = path.join(outDir, "kepco_rebate_2026_cover_9x16.png");
   fs.writeFileSync(coverOut, coverBuf);
   console.log(`Published 9:16 custom cover (${coverBuf.length} bytes) to dist/reels/kepco_rebate_2026_cover_9x16.png`);
-
-  const srcMp4Buf = await downloadDriveFile(KEPCO26_DRIVE_MP4_ID);
-  const tmpSrc = "/tmp/kepco26_drive_src.mp4";
-  fs.writeFileSync(tmpSrc, srcMp4Buf);
-
-  const targetMp4 = path.join(outDir, "kepco_rebate_2026_uhd_60fps.mp4");
-  execFileSync(
-    "ffmpeg",
-    [
-      "-y", "-i", tmpSrc,
-      "-vf", "unsharp=3:3:0.35:3:3:0.0,noise=alls=4:allf=t+u",
-      "-c:v", "libx264", "-preset", "fast", "-profile:v", "high", "-level", "4.2",
-      "-b:v", "6200k", "-minrate", "5200k", "-maxrate", "7800k", "-bufsize", "14000k",
-      "-pix_fmt", "yuv420p", "-c:a", "copy", "-movflags", "+faststart",
-      targetMp4,
-    ],
-    { stdio: "inherit" }
-  );
-  const stat = fs.statSync(targetMp4);
-  const sha = crypto.createHash("sha256").update(fs.readFileSync(targetMp4)).digest("hex");
-  fs.writeFileSync(
-    path.join(outDir, "kepco_rebate_2026_status.json"),
-    JSON.stringify({ ok: true, bytes: stat.size, sha256: sha, coverBytes: coverBuf.length, updatedAt: new Date().toISOString() }, null, 2),
-    "utf-8"
-  );
-  console.log(`Published KEPCO 2026 UHD 60FPS master (${stat.size} bytes) to dist/reels/kepco_rebate_2026_uhd_60fps.mp4`);
 }
 
 async function main(): Promise<void> {
@@ -129,7 +101,7 @@ async function main(): Promise<void> {
   }
 
   buildDishwasherCareReel(outDir);
-  await publishKepcoRebate2026Reel(outDir);
+  await publishKepcoRebate2026CoverOnly(outDir);
 }
 
 main().catch((err: unknown) => {
