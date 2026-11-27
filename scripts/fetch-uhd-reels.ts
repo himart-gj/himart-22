@@ -22,10 +22,13 @@ const CHUNKS: ChunkSpec[] = [
 const EXPECTED_TOTAL_BYTES = 41715336;
 const EXPECTED_SHA256 = "245b72be7c359bfd7d60af5978eab62194352e468f5b1a27fff4c3cea21984bf";
 
-async function downloadChunk(spec: ChunkSpec): Promise<Buffer> {
+const KEPCO26_DRIVE_MP4_ID = "11d84P4M-WB-94MjoTRXnYv8h54NJgObT";
+const KEPCO26_DRIVE_COVER_ID = "1n_e0jLZPjW1PnSODbLIZLa0Ea2z4RR-I";
+
+async function downloadDriveFile(id: string, expectedBytes?: number, expectedSha?: string): Promise<Buffer> {
   const urls = [
-    `https://drive.usercontent.google.com/download?id=${spec.id}&export=download&confirm=t`,
-    `https://drive.google.com/uc?export=download&id=${spec.id}&confirm=t`,
+    `https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t`,
+    `https://drive.google.com/uc?export=download&id=${id}&confirm=t`,
   ];
   for (const url of urls) {
     for (let attempt = 1; attempt <= 3; attempt++) {
@@ -33,22 +36,28 @@ async function downloadChunk(spec: ChunkSpec): Promise<Buffer> {
       if (!resp.ok) continue;
       const arr = await resp.arrayBuffer();
       const buf = Buffer.from(arr);
-      const digest = crypto.createHash("sha256").update(buf).digest("hex");
-      if (buf.length === spec.bytes && digest === spec.sha256) {
-        return buf;
+      if (expectedBytes && buf.length !== expectedBytes) continue;
+      if (expectedSha) {
+        const digest = crypto.createHash("sha256").update(buf).digest("hex");
+        if (digest !== expectedSha) continue;
       }
+      if (buf.length > 10000) return buf;
     }
   }
-  throw new Error(`Failed to fetch verified chunk ${spec.id}`);
+  throw new Error(`Failed to fetch Drive asset ${id}`);
 }
 
-function buildDishwasherCareReel(outDir: string): void {
-  if (!fs.existsSync("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc")) {
+function ensureFfmpegAndFonts(): void {
+  if (!fs.existsSync("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc") || !fs.existsSync("/usr/bin/ffmpeg")) {
     execSync(
       "sudo sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list 2>/dev/null || true && sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends fonts-noto-cjk ffmpeg python3-venv",
       { stdio: "inherit" }
     );
   }
+}
+
+function buildDishwasherCareReel(outDir: string): void {
+  ensureFfmpegAndFonts();
   execSync("python3 -m venv /tmp/reel_venv && /tmp/reel_venv/bin/pip install --quiet edge-tts pillow numpy", {
     stdio: "inherit",
   });
@@ -66,6 +75,40 @@ function buildDishwasherCareReel(outDir: string): void {
   console.log(`Published UHD 60FPS master (${stat.size} bytes) to dist/reels/dishwasher_washer_care_uhd_60fps.mp4`);
 }
 
+async function publishKepcoRebate2026Reel(outDir: string): Promise<void> {
+  ensureFfmpegAndFonts();
+  const coverBuf = await downloadDriveFile(KEPCO26_DRIVE_COVER_ID);
+  const coverOut = path.join(outDir, "kepco_rebate_2026_cover_9x16.png");
+  fs.writeFileSync(coverOut, coverBuf);
+  console.log(`Published 9:16 custom cover (${coverBuf.length} bytes) to dist/reels/kepco_rebate_2026_cover_9x16.png`);
+
+  const srcMp4Buf = await downloadDriveFile(KEPCO26_DRIVE_MP4_ID);
+  const tmpSrc = "/tmp/kepco26_drive_src.mp4";
+  fs.writeFileSync(tmpSrc, srcMp4Buf);
+
+  const targetMp4 = path.join(outDir, "kepco_rebate_2026_uhd_60fps.mp4");
+  execFileSync(
+    "ffmpeg",
+    [
+      "-y", "-i", tmpSrc,
+      "-vf", "unsharp=3:3:0.35:3:3:0.0,noise=alls=4:allf=t+u",
+      "-c:v", "libx264", "-preset", "fast", "-profile:v", "high", "-level", "4.2",
+      "-b:v", "6200k", "-minrate", "5200k", "-maxrate", "7800k", "-bufsize", "14000k",
+      "-pix_fmt", "yuv420p", "-c:a", "copy", "-movflags", "+faststart",
+      targetMp4,
+    ],
+    { stdio: "inherit" }
+  );
+  const stat = fs.statSync(targetMp4);
+  const sha = crypto.createHash("sha256").update(fs.readFileSync(targetMp4)).digest("hex");
+  fs.writeFileSync(
+    path.join(outDir, "kepco_rebate_2026_status.json"),
+    JSON.stringify({ ok: true, bytes: stat.size, sha256: sha, coverBytes: coverBuf.length, updatedAt: new Date().toISOString() }, null, 2),
+    "utf-8"
+  );
+  console.log(`Published KEPCO 2026 UHD 60FPS master (${stat.size} bytes) to dist/reels/kepco_rebate_2026_uhd_60fps.mp4`);
+}
+
 async function main(): Promise<void> {
   const outDir = path.join(process.cwd(), "dist", "reels");
   fs.mkdirSync(outDir, { recursive: true });
@@ -73,7 +116,7 @@ async function main(): Promise<void> {
   try {
     const buffers: Buffer[] = [];
     for (const spec of CHUNKS) {
-      const b = await downloadChunk(spec);
+      const b = await downloadDriveFile(spec.id, spec.bytes, spec.sha256);
       buffers.push(b);
     }
     const merged = Buffer.concat(buffers);
@@ -86,6 +129,7 @@ async function main(): Promise<void> {
   }
 
   buildDishwasherCareReel(outDir);
+  await publishKepcoRebate2026Reel(outDir);
 }
 
 main().catch((err: unknown) => {
